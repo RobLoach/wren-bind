@@ -4,7 +4,7 @@ Provides a registry to easily bind multiple compiled Wren modules.
 
 ## Usage
 
-1. Define your modules through the `WrenModule` struct...
+1. Define your modules with the `WrenModule` struct...
 
     ``` c
     #include "wren-bind.h"
@@ -47,6 +47,12 @@ Provides a registry to easily bind multiple compiled Wren modules.
 
     WrenModule foo = Foo();
     wrenBind(vm, &foo);
+    ```
+
+3. Once bound, you'll be able to use the Foo module from Wren...
+    ``` js
+    import "Foo" for Foo
+    System.print(Foo.bar(5, 8))
     ```
 
 ## Notes
