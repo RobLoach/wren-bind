@@ -1,0 +1,4 @@
+[submodule "vendor/wren"]
+	path = vendor/wren
+	url = https://github.com/wren-lang/wren.git
+	ignore = dirty
