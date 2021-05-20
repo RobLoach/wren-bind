@@ -4,11 +4,16 @@ Provides a registry to easily bind multiple compiled Wren modules.
 
 ## Usage
 
-1. Define your modules with the `WrenModule` struct...
+1. This is a single-header library, so define `WREN_BIND_IMPLEMENTATION` in one of your `.c` source files when including *wren-bind.h*:
 
     ``` c
+    #define WREN_BIND_IMPLEMENTATION
     #include "wren-bind.h"
+    ```
 
+2. Define your modules with the `WrenModule` struct...
+
+    ``` c
     void FooBar(WrenVM* vm) {
       double a = wrenGetSlotDouble(vm, 1);
       double b = wrenGetSlotDouble(vm, 2);
@@ -41,7 +46,7 @@ Provides a registry to easily bind multiple compiled Wren modules.
     }
     ```
 
-2. Register the module to the VM using the `wrenBind()` method...
+3. Register the module to the VM using the `wrenBind()` method...
     ``` c
     WrenVM* vm = wrenNewVM(&config);
 
@@ -49,7 +54,7 @@ Provides a registry to easily bind multiple compiled Wren modules.
     wrenBind(vm, &foo);
     ```
 
-3. Once bound, you'll be able to use the Foo module from Wren...
+4. Once bound, you'll be able to use the Foo module from Wren...
     ``` js
     import "Foo" for Foo
     System.print(Foo.bar(5, 8))

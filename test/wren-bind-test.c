@@ -2,6 +2,8 @@
 #include <stdio.h>
 
 #include "wren.h"
+
+#define WREN_BIND_IMPLEMENTATION
 #include "wren-bind.h"
 
 #include "modules/Foo.h"
@@ -12,8 +14,7 @@ void writeFn(WrenVM* vm, const char* text) {
 
 void errorFn(WrenVM* vm, WrenErrorType errorType,
              const char* module, const int line,
-             const char* msg)
-{
+             const char* msg) {
   switch (errorType)
   {
     case WREN_ERROR_COMPILE:
@@ -32,12 +33,16 @@ void errorFn(WrenVM* vm, WrenErrorType errorType,
 }
 
 int main() {
+  // Set up the 
   WrenConfiguration config;
   wrenInitConfiguration(&config);
   config.writeFn = &writeFn;
   config.errorFn = &errorFn;
+
+  // Create the VM.
   WrenVM* vm = wrenNewVM(&config);
 
+  // Create the Foo module and bind it.
   WrenModule foo = Foo();
   wrenBind(vm, &foo);
 

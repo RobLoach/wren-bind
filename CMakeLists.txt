@@ -12,15 +12,15 @@ if(NOT wren_FOUND)
     include("wren.cmake")
 endif()
 
-add_library(wren-bind STATIC
-    wren-bind.c
-    wren-bind.h
-)
-target_include_directories(wren-bind PUBLIC
+add_library(wren-bind INTERFACE)
+
+target_include_directories(wren-bind INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
-target_link_libraries(wren-bind PUBLIC
-    wren
+
+install(FILES
+  wren-bind.h
+  DESTINATION include
 )
 
 # Testing
