@@ -28,6 +28,7 @@
 #define WREN_BIND_H__
 
 #include "wren.h"
+#include "wren_vm.h"
 
 typedef struct WrenModule {
   const char* name;
@@ -37,6 +38,7 @@ typedef struct WrenModule {
 } WrenModule;
 
 bool wrenBind(WrenVM* vm, WrenModule* module);
+bool wrenBindModule(WrenVM* vm, const char* name, const char* code, WrenBindForeignMethodFn methodFunction, WrenBindForeignClassFn classFunction);
 
 #endif // WREN_BIND_H__
 
@@ -46,13 +48,16 @@ bool wrenBind(WrenVM* vm, WrenModule* module);
 
 #include <string.h>
 
-#include "wren_primitive.h"
-
 #ifndef WREN_BIND_MAX_MODULES
 #define WREN_BIND_MAX_MODULES 20
 #endif
 
-WrenForeignMethodFn WrenBindForeignMethod(WrenVM* vm, const char* module,
+/**
+ * Foreign method callback for Wren to call a binded Wren module function.
+ *
+ * @internal
+ */
+WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     const char* className, bool isStatic, const char* signature) {
   WrenModule** modules = (WrenModule**)vm->config.userData;
   for (int i = 0; i < WREN_BIND_MAX_MODULES; i++) {
@@ -69,7 +74,12 @@ WrenForeignMethodFn WrenBindForeignMethod(WrenVM* vm, const char* module,
   return NULL;
 }
 
-WrenForeignClassMethods WrenBindForeignClass(WrenVM* vm, const char* module,
+/**
+ * Foreign method callback for Wren to build a binded Wren class.
+ *
+ * @internal
+ */
+WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* module,
     const char* className) {
   WrenModule** modules = (WrenModule**)vm->config.userData;
   for (int i = 0; i < WREN_BIND_MAX_MODULES; i++) {
@@ -89,6 +99,14 @@ WrenForeignClassMethods WrenBindForeignClass(WrenVM* vm, const char* module,
   return empty;
 }
 
+/**
+ * Bind a Wren module to the given VM.
+ *
+ * @param vm The Wren virtual machine to bind to.
+ * @param module The Wren module of which to load and bind.
+ *
+ * @return True if binding succeeded, false otherwise.
+ */
 bool wrenBind(WrenVM* vm, WrenModule* module) {
   if (!vm->config.userData) {
     vm->config.userData = malloc(sizeof(WrenModule*) * WREN_BIND_MAX_MODULES);
@@ -100,19 +118,40 @@ bool wrenBind(WrenVM* vm, WrenModule* module) {
     }
   }
 
-  vm->config.bindForeignMethodFn = WrenBindForeignMethod;
-  vm->config.bindForeignClassFn = WrenBindForeignClass;
+  vm->config.bindForeignMethodFn = wrenBindForeignMethod;
+  vm->config.bindForeignClassFn = wrenBindForeignClass;
 
   WrenModule** modules = (WrenModule**)vm->config.userData;
   for (int i = 0; i < WREN_BIND_MAX_MODULES; i++) {
     if (modules[i] == NULL) {
       modules[i] = (void*)module;
+
       wrenInterpret(vm, module->name, module->code);
       return true;
     }
   }
 
   return false;
+}
+
+/**
+ * Bind a Wren module to the given VM, with the individual parameters provided.
+ *
+ * @param vm The Wren virtual machine to bind to.
+ * @param name The name of the module to bind.
+ * @param code The code of the module's declaration.
+ * @param methodFunction The function to be called when executing a method within the module (can be NULL).
+ * @param classFunction The function to be called when building an object of a class (can be NULL).
+ *
+ * @return True if binding succeeded, false otherwise.
+ */
+bool wrenBindModule(WrenVM* vm, const char* name, const char* code, WrenBindForeignMethodFn methodFunction, WrenBindForeignClassFn classFunction) {
+  WrenModule *module = (WrenModule *)malloc(sizeof(WrenModule));
+  module->name = name;
+  module->code = code;
+  module->methodFunction = methodFunction;
+  module->classFunction = classFunction;
+  return wrenBind(vm, module);
 }
 
 #endif // WREN_BIND_IMPLEMENTATION_ONCE

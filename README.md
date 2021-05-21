@@ -11,7 +11,7 @@ Provides a registry to easily bind multiple compiled Wren modules.
     #include "wren-bind.h"
     ```
 
-2. Define your modules with the `WrenModule` struct...
+2. Define your modules with the `WrenModule` struct:
 
     ``` c
     void FooBar(WrenVM* vm) {
@@ -21,11 +21,12 @@ Provides a registry to easily bind multiple compiled Wren modules.
     }
 
     WrenForeignMethodFn FooModuleMethod(WrenVM* vm, const char* module,
-        const char* className, bool isStatic, const char* signature)
-    {
-      if (strcmp(className, "Foo") == 0) {
-        if (isStatic && strcmp(signature, "bar(_,_)") == 0) {
-          return FooBar;
+        const char* className, bool isStatic, const char* signature) {
+      if (strcmp(module, "Foo") == 0) {
+        if (strcmp(className, "Foo") == 0) {
+          if (isStatic && strcmp(signature, "bar(_,_)") == 0) {
+            return FooBar;
+          }
         }
       }
 
@@ -46,7 +47,7 @@ Provides a registry to easily bind multiple compiled Wren modules.
     }
     ```
 
-3. Register the module to the VM using the `wrenBind()` method...
+3. Register the module to the VM using the `wrenBind()` method:
     ``` c
     WrenVM* vm = wrenNewVM(&config);
 
@@ -54,7 +55,14 @@ Provides a registry to easily bind multiple compiled Wren modules.
     wrenBind(vm, &foo);
     ```
 
-4. Once bound, you'll be able to use the Foo module from Wren...
+4. Alternatively, you can bind the module by binding the parameters with `wrenBindModule()`:
+    ``` c
+    WrenVM* vm = wrenNewVM(&config);
+
+    wrenBindModule(vm, "Foo", code, FooModuleMethod, NULL);
+    ```
+
+5. Once bound, you'll be able to use the Foo module from Wren:
     ``` js
     import "Foo" for Foo
     System.print(Foo.bar(5, 8))
